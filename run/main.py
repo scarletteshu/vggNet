@@ -14,24 +14,26 @@ if __name__ == "__main__":
     data = f.read()
     datadict = yaml.load(data, Loader=yaml.FullLoader) # str -> dict/list
     vgg_cfgs = datadict['VGG']
-    # print(type(vgg_cfgs['lr']))
+  
     # load data
     dl = Dataloader(vgg_cfgs, "../data/train/", "../data/test/")
     tr_datasets, tr_dataloader = dl.trDataLoader()
     tst_datasets, tst_dataloader = dl.tstDataLoader()
+    
     # model->CUDA->resume->parallel
     model = VGG_init(vgg_cfgs['structure'], 'vgg16')
     device = torch.device('cuda:7' if torch.cuda.is_available() else 'cpu')
     model.to(device)  # cuda before optim
 
-    optimizer = optim.Adam([{'params':model.parameters(),'initial_lr':float(vgg_cfgs['lr'])}], float(vgg_cfgs['lr']))
+    optimizer = optim.Adam([{'params':model.parameters(),'initial_lr':float(vgg_cfgs['lr'])}], float(vgg_cfgs['lr']))  #'initial_lr' is needed
     criterion = nn.CrossEntropyLoss() #default reduction = 'mean'
-
+    
+    # checkcpoint resume
     if os.path.isfile("../results/vgg16.pth.tar"):
         checkpoint = torch.load("vgg16.pth.tar")
         model.load_state_dict(checkpoint['model_state_dict'])
+        # load optimizer state dict
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-
         for state in optimizer.state.values():
             for k, v in state.items():
                 if torch.is_tensor(v):
@@ -43,10 +45,9 @@ if __name__ == "__main__":
         start_epoch = 0
 
     scheduler = optim.lr_scheduler.ExponentialLR(optimizer, float(vgg_cfgs['sch_gamma']), last_epoch= start_epoch)
-    print("schdu lr:{}, optim lr:{}\n".format(scheduler.get_lr()[0], optimizer.param_groups[0]['lr']))
+    # print("schdu lr:{}, optim lr:{}\n".format(scheduler.get_lr()[0], optimizer.param_groups[0]['lr']))
     print(model)
-    for epoch in range(start_epoch, vgg_cfgs['EPOCH']):
-        loss = 0
+    for epoch in range(start_epoch+1, vgg_cfgs['EPOCH']):
         model.train()
         for i, (img, label) in enumerate(tr_dataloader):
             img, label = img.to(device), label.to(device)
@@ -62,10 +63,11 @@ if __name__ == "__main__":
             # save results
             record = Record(loss, acc)
             record.save(epoch, "/vgg16/train/")
-
+        # decay lr
         if epoch % 10 == 0:
             print("lr scheduler step!, lr:{}".format(scheduler.get_lr()[0]))
             scheduler.step()
+        # save model
         torch.save(
             {
                 'start_epoch': epoch,
@@ -75,7 +77,8 @@ if __name__ == "__main__":
             },
             "../results/vgg16.pth.tar"
         )
-
+        
+        # model eval
         with torch.no_grad():
             model.eval()
             tst_loss = 0
