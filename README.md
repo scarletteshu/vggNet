@@ -31,7 +31,7 @@ data files are not uploaded, should be arranged like:<br>
  python main.py
  ```
 ### results
-result files are not uploaded
+result files are not uploaded<br>
 loss and accuray data will be saved in ```./results/train/``` and ```./results/test/```<br>
 model file will be saved as ```./results/vgg16.pth.tar/```
 
