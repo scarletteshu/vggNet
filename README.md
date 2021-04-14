@@ -1,4 +1,4 @@
-# vggnet
+# vggNet
 > Pytorch implement of vgg, 2 type classification for single channel imgs
 
 ### environment
