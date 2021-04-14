@@ -29,7 +29,7 @@ if __name__ == "__main__":
     criterion = nn.CrossEntropyLoss() #default reduction = 'mean'
 
     if os.path.isfile("../results/vgg16.pth.tar"):
-        checkpoint = torch.load("vgg16.pth.tar")
+        checkpoint = torch.load("../results/vgg16.pth.tar")
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
