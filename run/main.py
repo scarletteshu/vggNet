@@ -61,7 +61,7 @@ if __name__ == "__main__":
 
             print('epoch:{}, iter:{}, train_loss per img:{}, train_acc:{}'.format(epoch, i, loss, acc))
             # save results
-            record = Record(loss, acc)
+            record = Record(acc, loss)
             record.save(epoch, "/vgg16/train/")
 
         if epoch % 10 == 0:
